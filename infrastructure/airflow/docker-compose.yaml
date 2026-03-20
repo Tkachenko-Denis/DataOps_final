@@ -1,0 +1,110 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: airflow-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  airflow-init:
+    image: apache/airflow:2.10.5-python3.11
+    container_name: airflow-init
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: "${AIRFLOW_UID}:0"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    command: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create
+      --username ${AIRFLOW_ADMIN_USERNAME}
+      --firstname Admin
+      --lastname User
+      --role Admin
+      --email ${AIRFLOW_ADMIN_EMAIL}
+      --password ${AIRFLOW_ADMIN_PASSWORD}
+      "
+
+  airflow-webserver:
+    image: apache/airflow:2.10.5-python3.11
+    container_name: airflow-webserver
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: "${AIRFLOW_UID}:0"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    command: webserver
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:
+    image: apache/airflow:2.10.5-python3.11
+    container_name: airflow-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: "${AIRFLOW_UID}:0"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    command: scheduler
+
+  airflow-triggerer:
+    image: apache/airflow:2.10.5-python3.11
+    container_name: airflow-triggerer
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: "${AIRFLOW_UID}:0"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    command: triggerer
+
+volumes:
+  airflow-postgres-data:

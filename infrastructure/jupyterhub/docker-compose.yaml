@@ -1,0 +1,16 @@
+services:
+  jupyterhub:
+    build:
+      context: .
+    container_name: jupyterhub
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8002:8000"
+    volumes:
+      - jupyterhub-data:/data
+      - ./notebooks:/srv/jupyterhub/notebooks
+
+volumes:
+  jupyterhub-data:

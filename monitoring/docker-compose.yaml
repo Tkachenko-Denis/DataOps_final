@@ -1,0 +1,63 @@
+services:
+  ml-service-postgres:
+    image: postgres:16
+    container_name: monitoring-ml-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ml_service
+      POSTGRES_USER: ml_service
+      POSTGRES_PASSWORD: ml_service
+    volumes:
+      - monitoring-ml-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ml_service -d ml_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ml-service:
+    build:
+      context: ../services/ml-service
+    container_name: monitoring-ml-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ml_service:ml_service@ml-service-postgres:5432/ml_service
+      MODEL_VERSION: 1.0.0
+      SERVICE_NAME: customer-churn-api
+      LOG_LEVEL: INFO
+    depends_on:
+      ml-service-postgres:
+        condition: service_healthy
+    ports:
+      - "8003:8000"
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - ml-service
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  monitoring-ml-postgres-data:
+  grafana-data:

@@ -1,0 +1,46 @@
+replicaCount: 2
+
+image:
+  repository: denis/dataops-final-ml-service
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ml-service.local
+  path: /
+  pathType: Prefix
+
+env:
+  databaseUrl: postgresql+psycopg2://ml_service:ml_service@postgres:5432/ml_service
+  modelVersion: "1.0.0"
+  serviceName: customer-churn-api
+  logLevel: INFO
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  startup:
+    path: /health/startup
+    periodSeconds: 5
+    failureThreshold: 30
+  readiness:
+    path: /health/ready
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  liveness:
+    path: /health/live
+    initialDelaySeconds: 10
+    periodSeconds: 20
