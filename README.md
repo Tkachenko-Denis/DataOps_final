@@ -22,7 +22,6 @@
 - `k8s`
 - `helm/ml-service`
 - `prompts`
-- `docs`
 
 ## Требования
 
