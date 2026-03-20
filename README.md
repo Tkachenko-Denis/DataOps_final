@@ -58,7 +58,7 @@
 ## 1. MLflow
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\infrastructure\mlflow
+cd infrastructure/mlflow
 Copy-Item .env.example .env
 docker compose up -d --build
 docker compose ps
@@ -89,7 +89,7 @@ docker compose up -d --build
 ## 2. Airflow
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\infrastructure\airflow
+cd infrastructure/airflow
 Copy-Item .env.example .env
 docker compose up airflow-init
 docker compose up -d
@@ -110,7 +110,7 @@ docker compose ps
 ## 3. LakeFS
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\infrastructure\lakefs
+cd infrastructure/lakefs
 Copy-Item .env.example .env
 docker compose up -d
 docker compose ps
@@ -158,7 +158,7 @@ docker compose up -d
 ## 4. JupyterHub
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\infrastructure\jupyterhub
+cd infrastructure/jupyterhub
 Copy-Item .env.example .env
 docker compose up -d --build
 docker compose ps
@@ -180,7 +180,7 @@ docker compose ps
 ## 5. ML-service
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\services\ml-service
+cd services/ml-service
 Copy-Item .env.example .env
 docker compose up -d --build
 docker compose ps
@@ -208,7 +208,7 @@ Invoke-RestMethod `
 ## 6. Monitoring
 
 ```powershell
-cd C:\Users\denvt\DataOps_final\monitoring
+cd monitoring
 docker compose up -d --build
 docker compose ps
 ```
@@ -237,7 +237,6 @@ docker compose ps
 Применение:
 
 ```powershell
-cd C:\Users\denvt\DataOps_final
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/ingress.yaml
@@ -248,7 +247,6 @@ kubectl apply -f k8s/ingress.yaml
 Установка:
 
 ```powershell
-cd C:\Users\denvt\DataOps_final
 helm install ml-service ./helm/ml-service
 ```
 
@@ -267,19 +265,3 @@ helm upgrade ml-service ./helm/ml-service --set image.tag=1.0.1
 - `prompts/v3.txt`
 
 Их нужно занести в Prompt Storage MLflow вручную через интерфейс.
-
-## Что приложить к сдаче
-
-- ссылка на репозиторий
-- скриншот MLflow с экспериментом и run
-- скриншот Airflow с DAG
-- скриншот LakeFS с репозиторием, branch и commit
-- скриншот JupyterHub с открытым JupyterLab
-- скриншот успешного запроса к `POST /api/v1/predict`
-- скриншот Grafana с метриками
-- скриншот Prompt Storage с несколькими версиями
-
-## Дополнительные файлы
-
-- [Чек-лист проверки](C:/Users/denvt/DataOps_final/docs/checklist.md)
-- [Что показывать на защите](C:/Users/denvt/DataOps_final/docs/evidence.md)
